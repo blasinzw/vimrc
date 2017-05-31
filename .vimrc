@@ -1,4 +1,5 @@
 set nocompatible
+set shell=/bin/bash " fixes weird bug
 filetype off
 
 set rtp+=~/.vim/bundle/Vundle.vim
@@ -6,7 +7,6 @@ call vundle#begin()
 
 " Plugins
 Plugin 'gmarik/Vundle.vim'
-Plugin 'vim-scripts/indentpython.vim'
 Plugin 'scrooloose/syntastic'
 Plugin 'nvie/vim-flake8'
 Plugin 'tmhedberg/SimpylFold'
@@ -19,15 +19,27 @@ Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 " Plugin 'jeaye/color_coded'
 " Plugin 'rdnetto/YCM-Generator'
+
+" Colors and look & feel
 Plugin 'altercation/vim-colors-solarized'
 Plugin 'junegunn/goyo.vim'
 Plugin 'amix/vim-zenroom2'
+
+" Useful features
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'terryma/vim-expand-region'
 Plugin 'tpope/vim-commentary'
 Plugin 'tpope/vim-surround'
 Plugin 'ervandew/supertab'
 Plugin 'Yggdroot/indentLine'
+Plugin 'junegunn/limelight.vim'
+Plugin 'cohama/lexima.vim'
+
+" Language support
+Plugin 'suoto/vim-hdl'
+Plugin 'neovimhaskell/haskell-vim'
+Plugin 'vim-scripts/indentpython.vim'
+Plugin 'ternjs/tern_for_vim'
 
 " for vim snippets
 Plugin 'SirVer/ultisnips'
@@ -55,19 +67,6 @@ set t_Co=256
 " define BadWhitespace before using in a match
 highlight BadWhitespace ctermbg=red guibg=darkred
 
-" weird hacky fix for Backspace 
-func Backspace()
-	if col('.') == 1
-		if line('.') == 1
-			return "\<ESC>kA\<Del>"
-		else
-			return ""
-		endif
-	else
-		return "\<Left>\<Del>"
-	endif
-endfunc	
-		
 inoremap <BS> <c-r>=Backspace()<CR>
 
 " set default tabsize to 4
@@ -86,10 +85,16 @@ au! BufNewFile,BufRead *.py,*.c,*.h
 	\ set fileformat=unix |
 
 " Flag extra white space python & C
-au! BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
+au! BufRead,BufNewFile *.py,*.pyw,*.c,*.cpp,*.h match BadWhitespace /\s\+$/
 
 " Proper indention for full stack
-au! BufNewFile,BufRead *.js,*.html,*.css
+au! BufNewFile,BufRead *.js,*.html,*.css,*.scss,*.json
+	\ set tabstop=2 |
+	\ set softtabstop=2 |
+	\ set shiftwidth=2 |
+
+" Indentation for VHDL
+au! BufRead,BufNewFile *.vhd,*.vhdl
 	\ set tabstop=2 |
 	\ set softtabstop=2 |
 	\ set shiftwidth=2 |
@@ -116,17 +121,28 @@ set laststatus=2
 " for goyo zenmode
 nnoremap <silent> <leader>z :Goyo<CR> " \z
 
-" syntatic config
-" Don't like interference with goyo disabling for now
-"
-" set statusline+=%#warningmsg#
-" set statusline+=%{SyntasticStatuslineFlag()}
-" set statusline+=%*
+" augroup GOYO
+" 	" set zen mode on startup
+" 	autocmd! VimEnter * Goyo
+" 	" fix W19 augroup warning
+" 	autocmd! VimLeave * Goyo
+" augroup END
 
-" let g:syntastic_always_populate_loc_list=1
-" let g:syntastic_auto_loc_list=1
-" let g:syntastic_check_on_open=1
-" let g:syntastic_check_on_wq=0
+" Transparency code fix Solarized 
+let g:solarized_termtrans=1
+hi Normal ctermbg=none
+
+" syntatic config
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list=1
+let g:syntastic_auto_loc_list=1
+let g:syntastic_check_on_open=1
+let g:syntastic_check_on_wq=0
+let g:syntastic_python_checkers=['flake8']
+let g:syntastic_python_flake8_args='--ignore=E731,E226,F401,E221'
 
 " vim expand region mapping
 map K <Plug>(expand_region_expand)
@@ -143,7 +159,16 @@ let g:UltiSnipsJumpForwardTrigger="<C-j>"
 let g:UltiSnipsJumpBackwardTrigger="<C-k>"
 
 " python execution short cut
-nnoremap <silent> <F5> :!clear;python %<CR>
+nnoremap <silent> <leader>p :!clear;python %<CR>
+
+" flake8
+autocmd FileType python map <buffer> <F3> :call Flake8()<CR>
 
 " indentLine customization
-let g:indetLine_char='¦'
+let g:indentLine_char='¦'
+
+" lexima.vim autocomplete parentheses
+let g:lexima_enable_basic_rules=1
+
+" for tern
+let g:tern_show_argument_hints='on_hold'
